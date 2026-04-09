@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cerebro-memory"
+version = "0.1.0"
+description = "A self-correcting memory library for AI agents."
+dependencies = [
+    "pydantic",
+    "chromadb",
+    "loguru",
+    "ollama",
+    "openai"
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["cerebro*"]
