@@ -1,4 +1,20 @@
+# --- Virtual Environments ---
 .venv/
+env/
+venv/
+ENV/
+
+# --- Cerebro Data (Privacy & Security) ---
+# This ensures your personal 'thoughts' stay local
+cerebro_vault/
+
+# --- Python Build/Distribution ---
+# These appear after running 'pip install -e .'
+*.egg-info/
+dist/
+build/
 __pycache__/
 *.pyc
-*.egg-info/
+
+# --- System Junk ---
+.DS_Store
