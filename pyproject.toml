@@ -11,8 +11,13 @@ dependencies = [
     "chromadb",
     "loguru",
     "ollama",
-    "openai"
+    "openai",
+    "streamlit>=1.28.0",
+    "pandas>=2.0.0",
 ]
+
+[project.scripts]
+cerebro = "cerebro.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["."]
