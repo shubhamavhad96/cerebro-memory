@@ -1,1 +1,2 @@
 import graphene
+# Fixed schema
