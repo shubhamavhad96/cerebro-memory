@@ -1,115 +1,101 @@
-# Cerebro-Memory
+# CEREBRO | Cognitive Memory for AI Agents
 
-**A persistent, self-correcting memory layer for local AI agents.**
-
----
-
-[![Python Version](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://python.org)
-[![Status](https://img.shields.io/badge/status-active-success.svg)](https://github.com/shubhamavhad/cerebro-memory)
-[![Inference](https://img.shields.io/badge/inference-local--first-orange.svg)](https://ollama.com)
-[![License](https://img.shields.io/badge/license-MIT-green.svg)](https://opensource.org/licenses/MIT)
-
-## Project Overview
-
-Cerebro-Memory is a Python middleware library designed to provide long-term semantic context and autonomous runtime learning for AI agents. By integrating a local vector database with on-device inference, the library enables agents to retain state across sessions and automatically adjust their reasoning based on execution outcomes.
-
-The system is architected for environments where data sovereignty and cyber security are paramount, such as financial reconciliation, PII handling, or internal engineering infrastructure.
-
----
-
-## Technical Specifications
-
-| Feature | Description |
-| :--- | :--- |
-| **Self-Healing Loop** | Captures Python exceptions at runtime to generate and store negative-utility "Critical Lessons." |
-| **Data Sovereignty** | 100% on-device processing via **ChromaDB** and **Ollama**. |
-| **Semantic Retrieval** | Vector-based search (RAG) ensures context injection based on intent, not keywords. |
-| **Lazy Initialization** | Optimized for macOS to prevent database locking and minimize memory overhead. |
-| **Middleware Design** | Decouples memory management from core agent logic using a decorator-based interface. |
-
----
+A lightweight, version-aware memory layer that helps Claude and Cursor stay aligned with your codebase while cutting repeated context. Teams often see large savings on tokens once the vault is warm.
 
 ## Installation
 
-### 1. Prerequisites
-
-Cerebro-Memory requires **Ollama** for local inference. Ensure Ollama is running and the `llama3` model is available:
-
 ```bash
-# Verify Ollama installation
-ollama --version
-
-# Pull the required model
-ollama pull llama3
-```
-
-### 2. Setup and Installation
-
-Clone the repository and install the library in editable mode within a virtual environment.
-
-```bash
-# Clone the repository
-git clone [https://github.com/shubhamavhad/cerebro-memory.git](https://github.com/shubhamavhad/cerebro-memory.git)
-cd cerebro-memory
-
-# Initialize virtual environment
-python3 -m venv .venv
-source .venv/bin/activate
-
-# Install library in editable mode
 pip install -e .
 ```
 
----
+Use a virtual environment if you prefer. Local inference (for example Ollama) is optional and depends on how you wire agents.
 
-## Quick Start
+## Quick start
 
-The library exposes a single decorator interface to equip any function with persistent memory.
+1. Run `cerebro init` to set up your project.
+2. Run `cerebro scan` so the AI can read your code and store high-signal habits.
+3. Keep coding. Export when you want manifests and lock files updated.
 
-```python
-from cerebro.observer import observe_brain
+For the full interactive walkthrough:
 
-@observe_brain
-def my_agent(prompt: str, context: str = ""):
-    """
-    Cerebro-Memory automatically injects 'context' from relevant 
-    past lessons and memories prior to function execution.
-    """
-    import ollama
-    
-    system_instruction = f"Informed by past lessons: {context}"
-    
-    response = ollama.generate(
-        model='llama3',
-        prompt=prompt,
-        system=system_instruction
-    )
-    
-    return response['response']
+```bash
+cerebro guide
 ```
 
----
+## Core features
 
-## Architecture: The Feedback Loop
+- **Version-aware scanning** -- Reads common dependency files and pairs frameworks with versions when it can, so suggestions match what you actually ship.
+- **Persona swapping** -- Switch tone with `cerebro vibe` (presets or a plain text rules file).
+- **Team sync** -- Share `cerebro.lock` and use `cerebro pull` so everyone hydrates the same memory snapshot.
 
-Cerebro-Memory functions as an autonomous middleware layer using a three-phase cycle:
+## Governance & Branding
 
-*   **Recall Phase**: Upon function invocation, the current prompt is embedded and queried against the local **ChromaDB** instance. Memories with high utility scores are injected into the function's context.
-*   **Execution Phase**: The agent processes the prompt using the reinforced context provided by the middleware.
-*   **Commit Phase**: 
-    - **On Success**: The response is indexed with a standard utility weight.
-    - **On Failure**: If the function raises an exception, the traceback is intercepted and committed as a **"Critical Lesson"** with high-priority negative weight to prevent recurrence.
+`.cerebroignore` is Cerebro's governance boundary ("Sovereignty Wall"). Any path matched here is dropped before Slop Gate checks and before incubator/engram ingestion.
 
----
+- Generate a default policy file with `cerebro init-ignore` (or `cerebro init` for merge behavior).
+- Official icon asset for theme packs lives at `src/cerebro/resources/icons/cerebroignore.svg`.
+- Recommended icon theme mapping (VS Code / Cursor icon themes):
 
-## Security and Privacy
+```json
+{
+  "fileExtensions": {
+    "cerebroignore": "cerebroignore"
+  },
+  "fileNames": {
+    ".cerebroignore": "cerebroignore"
+  },
+  "iconDefinitions": {
+    "cerebroignore": {
+      "iconPath": "./icons/cerebroignore.svg"
+    }
+  }
+}
+```
 
-Designed for zero-leakage environments, Cerebro-Memory ensures that all vector embeddings, prompts, and execution data remain strictly within the local host's physical boundary. This architecture eliminates the third-party dependency risks associated with cloud-based LLM providers.
+Example `.cerebroignore` policy:
 
----
+```gitignore
+# Build and package artifacts
+dist/
+build/
+target/
+
+# Python runtime and caches
+.venv/
+__pycache__/
+*.pyc
+
+# Binary and generated blobs
+*.bin
+*.sqlite3
+
+# Secrets and environment files
+.env
+.env.*
+*.pem
+*.key
+```
+
+## Commands
+
+| Command | What it does |
+| --- | --- |
+| init | Initialize Cerebro in this project. |
+| scan | Let the AI read and understand your project. |
+| vibe | Change how the AI talks and acts. |
+| status | See what the AI knows and how much you saved. |
+| pull | Sync memory from your team. |
+| export | Sync memory to your AI (CLAUDE.md). |
+| guide | Open the interactive help menu. |
+| destroy | Remove the vault and strip Cerebro blocks from manifests (asks first). |
+
+Global flag: `-v` / `--verbose` mirrors more detail to the standard error stream.
 
 ## License
 
-This project is licensed under the MIT License - see the `LICENSE` file for details.
+MIT. See the `LICENSE` file in this repository.
 
-**Author:** [Shubham Avhad](https://github.com/shubhamavhad)
+### Stress Test Session 1 what is happening.
+# Cognitive Kernel established: Daemon stabilized.# Autonomic Test Sat Apr 18 17:30:16 EDT 2026
+# V2 Architecture Active
+# Stress Test 1
