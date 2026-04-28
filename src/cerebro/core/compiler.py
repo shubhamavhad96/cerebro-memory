@@ -148,6 +148,8 @@ class WikiCompiler:
 
 You receive raw git diffs (unpushed), IDE chat logs, and an EXISTING_WIKI. Ignore debugging noise, syntax errors, and failed prompts. Prefer durable architectural facts (invariants, contracts, data flows, ownership boundaries) over transient bug chatter.
 
+STRICT OUTPUT RULE: DO NOT engage in conversation. DO NOT say 'What a fascinating piece of code'. START your response immediately with the header '## Project Focus'. If no intents are provided, focus solely on the git diffs. If intents ARE provided, you MUST explicitly document them in an '## Architectural Decisions' section.
+
 STRICT BEHAVIORAL RULES (ADR / neural pathways):
 
 RULE 1 - NO AMNESIA: NEVER delete an old architectural decision. Append new knowledge, do not overwrite.
@@ -159,7 +161,7 @@ RULE 3 - THE NEURAL LINK: You must explicitly state WHY the pivot happened based
 RULE 4 - FORMATTING: Maintain a highly structured, scannable Markdown format.
 
 OUTPUT SHAPE (integrate with EXISTING_WIKI; never erase prior decisions):
-- Use clear top-level sections (e.g. `## Decisions`, `## Invariants`, `## Open questions`) as appropriate.
+- Use exact top-level sections: `## Project Focus`, `## Architectural Decisions`, `## File Dictionary`.
 - For each pivot, use `### PIVOT` then subsections such as **From**, **To**, **Why (from chat)**, **Neural link** (one short paragraph tying old → new reasoning).
 - Use wikilinks or inline cross-references (e.g. `[[ComponentName]]`, `see also: [[Topic]]`) where helpful.
 - Truncate git hashes to 7 characters when you cite them.
@@ -167,14 +169,14 @@ OUTPUT SHAPE (integrate with EXISTING_WIKI; never erase prior decisions):
 
 EXISTING_WIKI (carry forward in full; append and link; do not replace with a blank slate):
 """
-        wiki_body = existing_wiki or "_(empty — derive the initial wiki from RAW_GIT_DIFFS and CURSOR_CHAT only.)_"
+        wiki_body = existing_wiki or "_(empty — derive the initial wiki from RAW_GIT_DIFFS and PENDING_ARCHITECTURAL_INTENTS only.)_"
         no_diff = "_(no unpushed patch text resolved — upstream may be missing.)_"
-        no_chat = "_(no local Cursor chat could be read — workspace DB missing or locked.)_"
+        no_chat = "_(no pending architectural intents were provided.)_"
         scaffold = (
             f"{instruction}\n\n"
             "RAW_GIT_DIFFS (unpushed commits, `git log UP..HEAD -p` style):\n"
             f"{no_diff}\n\n"
-            "CURSOR_CHAT (user/assistant turns since last sync, local IDE history):\n"
+            "CRITICAL: PENDING ARCHITECTURAL INTENTS TO BE INTEGRATED:\n"
             f"{no_chat}\n"
         )
         payload_budget = max(0, min(_MAX_PAYLOAD_CHARS, _MAX_PROMPT_CHARS - len(scaffold)))
@@ -193,7 +195,7 @@ EXISTING_WIKI (carry forward in full; append and link; do not replace with a bla
             f"{instruction}{wiki_body}\n\n"
             "RAW_GIT_DIFFS (unpushed commits, `git log UP..HEAD -p` style):\n"
             f"{diff_block or no_diff}\n\n"
-            "CURSOR_CHAT (user/assistant turns since last sync, local IDE history):\n"
+            "CRITICAL: PENDING ARCHITECTURAL INTENTS TO BE INTEGRATED:\n"
             f"{chat_block or no_chat}\n"
         )
         if len(prompt) > _MAX_PROMPT_CHARS:
@@ -204,7 +206,7 @@ EXISTING_WIKI (carry forward in full; append and link; do not replace with a bla
                     f"{instruction}{wiki_body}\n\n"
                     "RAW_GIT_DIFFS (unpushed commits, `git log UP..HEAD -p` style):\n"
                     f"{diff_block or no_diff}\n\n"
-                    "CURSOR_CHAT (user/assistant turns since last sync, local IDE history):\n"
+                    "CRITICAL: PENDING ARCHITECTURAL INTENTS TO BE INTEGRATED:\n"
                     f"{chat_block or no_chat}\n"
                 )
             if len(prompt) > _MAX_PROMPT_CHARS:

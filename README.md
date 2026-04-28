@@ -90,6 +90,8 @@ Cerebro 3.0 is made of three parts:
 2. **The hook:** A `pre-push` script runs `cerebro compile` quietly, then `git add` / `git commit --no-verify` for `KNOWLEDGE_GRAPH.md` when it changed. Hook mode never blocks your push on LLM failure.
 3. **The distiller (LLM):** A Graphify-style system prompt discards debug noise and emits dense, cross-linked Markdown suitable as an **OS-level LLM-wiki** at `.cerebro/KNOWLEDGE_GRAPH.md`.
 
+<!-- This is the test -->
+
 ## License
 
 Released under the [MIT License](LICENSE).
