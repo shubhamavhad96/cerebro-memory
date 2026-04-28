@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "Cerebro": {
+      "command": "/Users/shubhamavhad/Desktop/cerebro-memory/.venv/bin/python3.14",
+      "args": [
+        "/Users/shubhamavhad/Desktop/cerebro-memory/src/cerebro/adapters/mcp_server.py"
+      ]
+    }
+  }
+}
