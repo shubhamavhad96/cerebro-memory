@@ -47,10 +47,4 @@ def get_pending_intents(root_dir: Path | str) -> str:
     if not blocks:
         return ""
 
-    formatted = "\n\n---\n\n".join(blocks)
-    try:
-        queue_path.write_text("[]\n", encoding="utf-8")
-    except OSError:
-        # If draining fails, do not emit data to avoid reprocessing ambiguity.
-        return ""
-    return formatted
+    return "\n\n---\n\n".join(blocks)

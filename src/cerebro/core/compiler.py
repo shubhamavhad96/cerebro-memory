@@ -525,6 +525,12 @@ EXISTING_WIKI (carry forward in full; append and link; do not replace with a bla
 
         try:
             wiki_path.write_text(markdown + "\n", encoding="utf-8")
+            queue_path = root / ".cerebro" / "intent_queue.json"
+            if queue_path.exists():
+                try:
+                    queue_path.write_text("[]\n", encoding="utf-8")
+                except OSError:
+                    pass
         except OSError as exc:
             _print_error(f"Failed to write wiki file: {exc}")
             return {

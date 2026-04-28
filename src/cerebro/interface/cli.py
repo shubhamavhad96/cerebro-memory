@@ -158,6 +158,9 @@ PYTHON="__PYTHON_EXE__"
 set +e
 OUT=$("$PYTHON" -m cerebro.interface.cli compile --quiet 2>&1)
 RC=$?
+if [[ -n "$OUT" ]]; then
+  echo "$OUT" >&2
+fi
 set -e
 if [[ $RC -ne 0 ]]; then
   echo "[Cerebro] compile exited with status $RC; your push will continue. $OUT" >&2
