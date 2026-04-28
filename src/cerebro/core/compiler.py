@@ -148,7 +148,7 @@ class WikiCompiler:
 
 You receive raw git diffs (unpushed), IDE chat logs, and an EXISTING_WIKI. Ignore debugging noise, syntax errors, and failed prompts. Prefer durable architectural facts (invariants, contracts, data flows, ownership boundaries) over transient bug chatter.
 
-STRICT OUTPUT RULE: DO NOT engage in conversation. DO NOT say 'What a fascinating piece of code'. START your response immediately with the header '## Project Focus'. If no intents are provided, focus solely on the git diffs. If intents ARE provided, you MUST explicitly document them in an '## Architectural Decisions' section.
+MANDATORY OUTPUT RULE: You are a clinical architectural compiler. DO NOT engage in conversation. DO NOT use emojis. DO NOT say 'I'm here to help'. START your response immediately with '## Project Focus'. If there are PENDING ARCHITECTURAL INTENTS, you MUST prioritize them in a section called '## Architectural Decisions'.
 
 STRICT BEHAVIORAL RULES (ADR / neural pathways):
 
@@ -161,7 +161,9 @@ RULE 3 - THE NEURAL LINK: You must explicitly state WHY the pivot happened based
 RULE 4 - FORMATTING: Maintain a highly structured, scannable Markdown format.
 
 OUTPUT SHAPE (integrate with EXISTING_WIKI; never erase prior decisions):
-- Use exact top-level sections: `## Project Focus`, `## Architectural Decisions`, `## File Dictionary`.
+- Header 1: `## Project Focus` (Clinical summary of code diffs)
+- Header 2: `## Architectural Decisions` (Document the PIVOT/Intents here)
+- Header 3: `## File Dictionary` (The engram mapping)
 - For each pivot, use `### PIVOT` then subsections such as **From**, **To**, **Why (from chat)**, **Neural link** (one short paragraph tying old → new reasoning).
 - Use wikilinks or inline cross-references (e.g. `[[ComponentName]]`, `see also: [[Topic]]`) where helpful.
 - Truncate git hashes to 7 characters when you cite them.
@@ -176,7 +178,7 @@ EXISTING_WIKI (carry forward in full; append and link; do not replace with a bla
             f"{instruction}\n\n"
             "RAW_GIT_DIFFS (unpushed commits, `git log UP..HEAD -p` style):\n"
             f"{no_diff}\n\n"
-            "CRITICAL: PENDING ARCHITECTURAL INTENTS TO BE INTEGRATED:\n"
+            "CRITICAL: PENDING ARCHITECTURAL INTENTS TO BE INTEGRATED (DIRECT COMMANDS FROM THE LEAD ENGINEER):\n"
             f"{no_chat}\n"
         )
         payload_budget = max(0, min(_MAX_PAYLOAD_CHARS, _MAX_PROMPT_CHARS - len(scaffold)))
@@ -195,7 +197,7 @@ EXISTING_WIKI (carry forward in full; append and link; do not replace with a bla
             f"{instruction}{wiki_body}\n\n"
             "RAW_GIT_DIFFS (unpushed commits, `git log UP..HEAD -p` style):\n"
             f"{diff_block or no_diff}\n\n"
-            "CRITICAL: PENDING ARCHITECTURAL INTENTS TO BE INTEGRATED:\n"
+            "CRITICAL: PENDING ARCHITECTURAL INTENTS TO BE INTEGRATED (DIRECT COMMANDS FROM THE LEAD ENGINEER):\n"
             f"{chat_block or no_chat}\n"
         )
         if len(prompt) > _MAX_PROMPT_CHARS:
@@ -206,7 +208,7 @@ EXISTING_WIKI (carry forward in full; append and link; do not replace with a bla
                     f"{instruction}{wiki_body}\n\n"
                     "RAW_GIT_DIFFS (unpushed commits, `git log UP..HEAD -p` style):\n"
                     f"{diff_block or no_diff}\n\n"
-                    "CRITICAL: PENDING ARCHITECTURAL INTENTS TO BE INTEGRATED:\n"
+                    "CRITICAL: PENDING ARCHITECTURAL INTENTS TO BE INTEGRATED (DIRECT COMMANDS FROM THE LEAD ENGINEER):\n"
                     f"{chat_block or no_chat}\n"
                 )
             if len(prompt) > _MAX_PROMPT_CHARS:
