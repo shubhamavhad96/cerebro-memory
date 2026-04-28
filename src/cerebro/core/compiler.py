@@ -144,41 +144,25 @@ class WikiCompiler:
     def _build_merge_prompt(
         self, existing_wiki: str, diff_text: str, chat_text: str
     ) -> str:
-        instruction = """You are the Permanent Architectural Memory of this codebase. You do not just track the current state; you track the EVOLUTION of the architecture.
+        system_prompt = """You are a strict text-processing script. DO NOT roleplay. DO NOT converse. DO NOT output pleasantries. You must output EXACTLY the following Markdown structure, filling in the brackets with the provided data.
 
-You receive raw git diffs (unpushed), IDE chat logs, and an EXISTING_WIKI. Ignore debugging noise, syntax errors, and failed prompts. Prefer durable architectural facts (invariants, contracts, data flows, ownership boundaries) over transient bug chatter.
+## Project Focus
+[Summarize the provided Git Diffs in 2 sentences. If no diffs are meaningful, write "No codebase changes."]
 
-MANDATORY OUTPUT RULE: You are a clinical architectural compiler. DO NOT engage in conversation. DO NOT use emojis. DO NOT say 'I'm here to help'. START your response immediately with '## Project Focus'. If there are PENDING ARCHITECTURAL INTENTS, you MUST prioritize them in a section called '## Architectural Decisions'.
+## Architectural Decisions
+[CRITICAL: You MUST explicitly list the provided PENDING INTENTS here. Do not alter them. If no intents are provided, write "No pending decisions."]
 
-STRICT BEHAVIORAL RULES (ADR / neural pathways):
-
-RULE 1 - NO AMNESIA: NEVER delete an old architectural decision. Append new knowledge, do not overwrite.
-
-RULE 2 - THE PIVOT: If the developer pivots or changes a previous decision, you MUST create a `### PIVOT` block. Do not hallucinate examples; use ONLY the provided chat intent.
-
-RULE 3 - THE NEURAL LINK: You must explicitly state WHY the pivot happened based on the chat history. Link the old decision to the new decision so future developers understand the historical context and the exact reasoning for the switch.
-
-RULE 4 - FORMATTING: Maintain a highly structured, scannable Markdown format.
-
-OUTPUT SHAPE (integrate with EXISTING_WIKI; never erase prior decisions):
-- Header 1: `## Project Focus` (Clinical summary of code diffs)
-- Header 2: `## Architectural Decisions` (Document the PIVOT/Intents here)
-- Header 3: `## File Dictionary` (The engram mapping)
-- For each pivot, use `### PIVOT` then subsections such as **From**, **To**, **Why (from chat)**, **Neural link** (one short paragraph tying old → new reasoning).
-- Use wikilinks or inline cross-references (e.g. `[[ComponentName]]`, `see also: [[Topic]]`) where helpful.
-- Truncate git hashes to 7 characters when you cite them.
-- No conversational preamble or meta-commentary. Markdown body only.
-
-EXISTING_WIKI (carry forward in full; append and link; do not replace with a blank slate):
+## File Dictionary
+[Update the file tracking based on the diffs.]
 """
         wiki_body = existing_wiki or "_(empty — derive the initial wiki from RAW_GIT_DIFFS and PENDING_ARCHITECTURAL_INTENTS only.)_"
         no_diff = "_(no unpushed patch text resolved — upstream may be missing.)_"
         no_chat = "_(no pending architectural intents were provided.)_"
         scaffold = (
-            f"{instruction}\n\n"
+            f"{system_prompt}\n\n"
             "RAW_GIT_DIFFS (unpushed commits, `git log UP..HEAD -p` style):\n"
             f"{no_diff}\n\n"
-            "CRITICAL: PENDING ARCHITECTURAL INTENTS TO BE INTEGRATED (DIRECT COMMANDS FROM THE LEAD ENGINEER):\n"
+            "PENDING INTENTS (CRITICAL - MUST BE LISTED VERBATIM IN '## Architectural Decisions'):\n"
             f"{no_chat}\n"
         )
         payload_budget = max(0, min(_MAX_PAYLOAD_CHARS, _MAX_PROMPT_CHARS - len(scaffold)))
@@ -194,10 +178,11 @@ EXISTING_WIKI (carry forward in full; append and link; do not replace with a bla
             wiki_body = wiki_body[-wiki_budget:] if wiki_budget else ""
 
         prompt = (
-            f"{instruction}{wiki_body}\n\n"
+            f"{system_prompt}\n\n"
+            f"EXISTING_WIKI (reference context only):\n{wiki_body}\n\n"
             "RAW_GIT_DIFFS (unpushed commits, `git log UP..HEAD -p` style):\n"
             f"{diff_block or no_diff}\n\n"
-            "CRITICAL: PENDING ARCHITECTURAL INTENTS TO BE INTEGRATED (DIRECT COMMANDS FROM THE LEAD ENGINEER):\n"
+            "PENDING INTENTS (CRITICAL - MUST BE LISTED VERBATIM IN '## Architectural Decisions'):\n"
             f"{chat_block or no_chat}\n"
         )
         if len(prompt) > _MAX_PROMPT_CHARS:
@@ -205,10 +190,11 @@ EXISTING_WIKI (carry forward in full; append and link; do not replace with a bla
             if overflow > 0 and wiki_body:
                 wiki_body = wiki_body[overflow:]
                 prompt = (
-                    f"{instruction}{wiki_body}\n\n"
+                    f"{system_prompt}\n\n"
+                    f"EXISTING_WIKI (reference context only):\n{wiki_body}\n\n"
                     "RAW_GIT_DIFFS (unpushed commits, `git log UP..HEAD -p` style):\n"
                     f"{diff_block or no_diff}\n\n"
-                    "CRITICAL: PENDING ARCHITECTURAL INTENTS TO BE INTEGRATED (DIRECT COMMANDS FROM THE LEAD ENGINEER):\n"
+                    "PENDING INTENTS (CRITICAL - MUST BE LISTED VERBATIM IN '## Architectural Decisions'):\n"
                     f"{chat_block or no_chat}\n"
                 )
             if len(prompt) > _MAX_PROMPT_CHARS:
