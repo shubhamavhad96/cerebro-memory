@@ -144,61 +144,23 @@ class WikiCompiler:
     def _build_merge_prompt(
         self, existing_wiki: str, diff_text: str, chat_text: str
     ) -> str:
-        system_prompt = """You are a strict text-processing script. DO NOT roleplay. DO NOT converse. DO NOT output pleasantries. You must output EXACTLY the following Markdown structure, filling in the brackets with the provided data.
-
-## Project Focus
-[Summarize the provided Git Diffs in 2 sentences. If no diffs are meaningful, write "No codebase changes."]
-
-## Architectural Decisions
-[CRITICAL: You MUST explicitly list the provided PENDING INTENTS here. Do not alter them. If no intents are provided, write "No pending decisions."]
-
-## File Dictionary
-[Update the file tracking based on the diffs.]
-"""
-        wiki_body = existing_wiki or "_(empty — derive the initial wiki from RAW_GIT_DIFFS and PENDING_ARCHITECTURAL_INTENTS only.)_"
-        no_diff = "_(no unpushed patch text resolved — upstream may be missing.)_"
-        no_chat = "_(no pending architectural intents were provided.)_"
-        scaffold = (
-            f"{system_prompt}\n\n"
-            "RAW_GIT_DIFFS (unpushed commits, `git log UP..HEAD -p` style):\n"
-            f"{no_diff}\n\n"
-            "PENDING INTENTS (CRITICAL - MUST BE LISTED VERBATIM IN '## Architectural Decisions'):\n"
-            f"{no_chat}\n"
+        system_prompt = (
+            "Summarize the following codebase changes in 2 concise sentences. "
+            "Return ONLY the summary text. Do not use formatting."
         )
-        payload_budget = max(0, min(_MAX_PAYLOAD_CHARS, _MAX_PROMPT_CHARS - len(scaffold)))
-        diff_block, chat_block = truncate_payload(diff_text, chat_text, payload_budget)
+        no_diff = "_(no unpushed patch text resolved — upstream may be missing.)_"
+        payload_budget = max(0, min(_MAX_PAYLOAD_CHARS, _MAX_PROMPT_CHARS - len(system_prompt) - 64))
+        diff_block, _ = truncate_payload(diff_text, "", payload_budget)
         if len(diff_block) > _MAX_INPUT_CHARS:
             diff_block = diff_block[:_MAX_INPUT_CHARS] + "\n\n[… truncated by Cerebro …]"
-        if len(chat_block) > _MAX_INPUT_CHARS:
-            chat_block = chat_block[:_MAX_INPUT_CHARS] + "\n\n[… truncated by Cerebro …]"
-
-        payload_len = len(diff_block or no_diff) + len(chat_block or no_chat)
-        wiki_budget = max(0, _MAX_PROMPT_CHARS - len(scaffold) - payload_len)
-        if len(wiki_body) > wiki_budget:
-            wiki_body = wiki_body[-wiki_budget:] if wiki_budget else ""
 
         prompt = (
             f"{system_prompt}\n\n"
-            f"EXISTING_WIKI (reference context only):\n{wiki_body}\n\n"
             "RAW_GIT_DIFFS (unpushed commits, `git log UP..HEAD -p` style):\n"
-            f"{diff_block or no_diff}\n\n"
-            "PENDING INTENTS (CRITICAL - MUST BE LISTED VERBATIM IN '## Architectural Decisions'):\n"
-            f"{chat_block or no_chat}\n"
+            f"{diff_block or no_diff}\n"
         )
         if len(prompt) > _MAX_PROMPT_CHARS:
-            overflow = len(prompt) - _MAX_PROMPT_CHARS
-            if overflow > 0 and wiki_body:
-                wiki_body = wiki_body[overflow:]
-                prompt = (
-                    f"{system_prompt}\n\n"
-                    f"EXISTING_WIKI (reference context only):\n{wiki_body}\n\n"
-                    "RAW_GIT_DIFFS (unpushed commits, `git log UP..HEAD -p` style):\n"
-                    f"{diff_block or no_diff}\n\n"
-                    "PENDING INTENTS (CRITICAL - MUST BE LISTED VERBATIM IN '## Architectural Decisions'):\n"
-                    f"{chat_block or no_chat}\n"
-                )
-            if len(prompt) > _MAX_PROMPT_CHARS:
-                prompt = prompt[:_MAX_PROMPT_CHARS]
+            prompt = prompt[:_MAX_PROMPT_CHARS]
         return prompt
 
     def _call_anthropic(self, prompt: str) -> str | None:
@@ -481,8 +443,6 @@ class WikiCompiler:
         self.out_dir.mkdir(parents=True, exist_ok=True)
 
         wiki_path = self.out_dir / "KNOWLEDGE_GRAPH.md"
-        existing_wiki = self._existing_wiki_text(wiki_path)
-
         diff_text = read_unpushed_patch_text(root)
         chat_text = get_pending_intents(root)
 
@@ -494,9 +454,9 @@ class WikiCompiler:
                 "has_chat": False,
             }
 
-        prompt = self._build_merge_prompt(existing_wiki, diff_text, chat_text)
-        markdown = self._call_llm(prompt)
-        if markdown is None:
+        prompt = self._build_merge_prompt("", diff_text, "")
+        llm_summary = self._call_llm(prompt)
+        if llm_summary is None:
             return {
                 "status": "llm_unavailable",
                 "out_dir": str(self.out_dir),
@@ -504,7 +464,7 @@ class WikiCompiler:
                 "has_chat": bool(chat_text.strip()),
             }
 
-        if not markdown:
+        if not llm_summary:
             _print_error("LLM returned an empty response; wiki not updated.")
             return {
                 "status": "error",
@@ -512,6 +472,18 @@ class WikiCompiler:
                 "has_diffs": bool(diff_text.strip()),
                 "has_chat": bool(chat_text.strip()),
             }
+
+        pending_intents = [b.strip() for b in chat_text.split("\n\n---\n\n") if b.strip()]
+        if pending_intents:
+            decisions = "\n".join(f"- {intent}" for intent in pending_intents)
+        else:
+            decisions = "No pending decisions."
+        markdown = (
+            "## Project Focus\n"
+            f"{llm_summary.strip()}\n\n"
+            "## Architectural Decisions\n"
+            f"{decisions}\n"
+        )
 
         try:
             wiki_path.write_text(markdown + "\n", encoding="utf-8")

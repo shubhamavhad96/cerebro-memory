@@ -142,8 +142,9 @@ def _git_dir(repo: Path) -> Path | None:
 
 def _write_pre_push_hook(hook_path: Path) -> None:
     """
-    Write an executable ``pre-push`` hook: run ``cerebro compile`` (fail-soft), commit wiki.
+    Write an executable ``pre-push`` hook: run ``cerebro compile`` (fail-soft), commit memory.
 
+    On KNOWLEDGE_GRAPH updates, commits locally and exits non-zero so the user re-runs push.
     Uses the interpreter running the installer so venv-bound installs stay consistent.
     If the LLM is offline, the hook prints a warning and returns success so the push continues.
     """
@@ -166,11 +167,11 @@ if [[ $RC -ne 0 ]]; then
   echo "[Cerebro] compile exited with status $RC; your push will continue. $OUT" >&2
   exit 0
 fi
-STAT=$(git status --porcelain -- .cerebro/KNOWLEDGE_GRAPH.md 2>/dev/null | head -1 || true)
-if [[ -n "${STAT}" ]]; then
-  # Note: This commit will sync to remote on the NEXT push due to Git's pre-push lifecycle.
-  git add .cerebro/KNOWLEDGE_GRAPH.md
-  git commit --no-verify -m "chore(cerebro): sync OS-level memory" || true
+git add .cerebro/KNOWLEDGE_GRAPH.md
+if git commit -m "chore(cerebro): sync OS-level memory" --only .cerebro/KNOWLEDGE_GRAPH.md > /dev/null 2>&1; then
+  echo -e "\\n\\033[1;33m[CEREBRO WARNING]\\033[0m Memory was updated and committed locally." >&2
+  echo -e "\\033[1;33mYou must run 'git push' ONE MORE TIME to push the new memory commit to the remote.\\033[0m\\n" >&2
+  exit 1
 fi
 exit 0
 """.replace(
