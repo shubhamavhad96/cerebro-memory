@@ -1,7 +1,7 @@
 ## Project Focus
-Here is a summary of the codebase changes in 2 concise sentences:
+Here is a concise summary of the codebase changes in 2 sentences:
 
-Cerebro-Memory is a Python middleware library designed to provide long-term semantic context and autonomous runtime learning for AI agents, enabling them to retain state across sessions and adjust their reasoning based on execution outcomes. The library allows for local vector database storage and on-device inference using Ollama, ensuring data sovereignty and cyber security in environments where data confidentiality is paramount.
+Cerebro-Memory is a Python middleware library that provides a persistent, self-correcting memory layer for local AI agents, enabling them to retain state across sessions and adjust their reasoning based on execution outcomes. The library allows teams to cut repeated context by lazy initializing the memory layer and using version-aware scanning, persona swapping, and team sync features.
 
 ## Architectural Decisions
 No pending decisions.
